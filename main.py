@@ -175,6 +175,7 @@ if __name__ == '__main__':
         'is_get_fruit': False,
         'score': 0
     }
+
     # 主循环
     while game['is_gaming']:
         # 操作处理
@@ -201,6 +202,7 @@ if __name__ == '__main__':
         if not game['is_fruit_exist']:
             fruit = set_fruit_pos()
             game['is_fruit_exist'] = True
+
         # 更新画面
         screen.fill(color['bg'])
         draw_stage()
