@@ -1,7 +1,6 @@
 import pygame
 import pygame.freetype
 import random
-import time
 from enum import Enum
 
 
@@ -21,6 +20,7 @@ pygame.init()
 color = {
     'white': [255, 255, 255],
     'gray': [170, 170, 170],
+    'dark_gray': [85, 85, 85],
     'black': [0, 0, 0],
     'red': [255, 85, 85],
     'aqua': [85, 255, 255],
@@ -29,25 +29,28 @@ color = {
     'none': [0, 0, 0, 0]
 }
 #  实际使用的颜色
-color['bg'] = color['white']
-color['frame'] = color['gold']
-color['line'] = color['gray']
-color['apple'] = color['red']
-color['head'] = color['deep_green']
-color['tail'] = color['aqua']
+color['bg'] = color['white']            # 背景色，虽然我更喜欢深灰色
+color['frame'] = color['gold']          # 棋盘边框
+color['line'] = color['gray']           # 棋盘网格
+color['apple'] = color['red']           # 苹果（水果）的颜色
+color['head'] = color['deep_green']     # 蛇头的颜色
+color['tail'] = color['aqua']           # 蛇尾的颜色，实际上做了渐变的效果，这个颜色将会是最末尾的，越往前颜色越深
 # 字体
 JBmonoB = pygame.freetype.Font('fonts\\JetBrainsMono-Bold.ttf', 24)
+# https://www.jetbrains.com/lp/mono/
+#  JetBrainsMono.
+#  A typeface for developers
+# 游戏内没写中文是因为字体太大了，不是为了只用这个完美的字体，绝对不是
 default_font = JBmonoB
 # 窗口标题
-pygame.display.set_caption("[GAME]")
+pygame.display.set_caption("[GAME] Snake ~\\__/-O~")    # 这条蛇不如不画...
 # 窗口大小
 size = width, height = 800, 600
 screen = pygame.display.set_mode(size)
 # 背景颜色
 screen.fill(color['bg'])
-# 基本时钟
+# 时钟
 clock = pygame.time.Clock()
-clock.tick(5)
 
 # 游戏网格
 #  行列
@@ -55,7 +58,6 @@ row = 21
 column = 21
 #  格尺寸
 tile_size = 25
-# 绘制游戏网格
 #  偏移
 drift_H = default_font.get_sized_height(1)
 drift_W = -8*tile_size
@@ -217,10 +219,22 @@ if __name__ == '__main__':
         for tail in snake['tail']:
             pygame.draw.rect(screen, temp_color, get_tile_pos_dest(tail))
             for i in range(3):
-                temp_color[i] -= reduce_color[i]
+                temp_color[i] -= reduce_color[i]        # 颜色渐变
         #  分数
         default_font.render_to(screen, (frame_L + tile_size * 5, frame_T - tile_size),
                                "{0}".format(game['score']), color['gray'], color['none'])
+
+        # 游戏结束
+        if game['is_game_over']:
+            # 显示结算，不清空屏幕是为了保留玩家给成果截图的时间
+            default_font.render_to(screen, (10, frame_T),
+                                   'Game Over!', color['red'], color['none'], size=100)
+            default_font.render_to(screen, (10, frame_T + default_font.get_sized_height(80)),
+                                   'You got {} score!'.format(game['score']), color['red'], color['none'], size=66)
+            default_font.render_to(screen, (10, frame_T + 2*default_font.get_sized_height(70)),
+                                   'You can close the window.', color['red'], color['none'], size=40)
+            game['is_gaming'] = False
+        pygame.display.flip()
 
         # 日志
         print('[log]')
@@ -228,12 +242,10 @@ if __name__ == '__main__':
         print('#', fruit)
         print('@', snake['head'])
 
-        if game['is_game_over']:
-            default_font.render_to(screen, (0, frame_T), 'Game Over!', color['red'], color['none'], size=100)
-            game['is_gaming'] = False
-        pygame.display.flip()
+        # 控制帧率
         clock.tick(4)
 
+    # 游戏结束后等待手动退出
     while game['is_game_over']:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
