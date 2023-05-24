@@ -10,14 +10,21 @@ color = {
     'gray': [170, 170, 170],
     'black': [0, 0, 0],
     'red': [255, 85, 85],
+    'green': [85, 255, 85],
+    'aqua': [85, 255, 255],
+    'deep_green': [0, 170, 0],
     'gold': [221, 214, 5],
     'none': [0, 0, 0, 0]
 }
 color['bg'] = color['black']
 color['frame'] = color['gold']
+color['line'] = color['gray']
+color['apple'] = color['red']
+color['head'] = color['deep_green']
+color['tail'] = color['aqua']
 # 字体
-JBmonoExB = pygame.freetype.Font('fonts\\JetBrainsMono-ExtraBold.ttf', 24)
-
+JBmonoB = pygame.freetype.Font('fonts\\JetBrainsMono-Bold.ttf', 24)
+default_font = JBmonoB
 # 窗口标题
 pygame.display.set_caption("[GAME]")
 # 窗口大小
@@ -29,36 +36,46 @@ screen.fill(color['bg'])
 clock = pygame.time.Clock()
 clock.tick(20)
 
+# 游戏网格
+#  行列
+row = 20
+column = 20
+#  格尺寸
+tile_size = 25
+#  偏移
+drift_T = 20
+drift_L = 0
 
-# 暂停界面
-def pause_menu():
-    menu_title = pygame.Vector2(359, 55)
-    pygame.draw.rect(screen, color['white'], (350, 50, 100, 30))
-    JBmonoExB.render_to(screen, menu_title,
-                        text='PAUSED',
-                        fgcolor=color['red'],
-                        bgcolor=color['none'],
-                        size=24)
+frame_L = (width - row * tile_size) / 2 + drift_L
+frame_R = width - frame_L + drift_L * 2
+frame_T = (height - column * tile_size) / 2 + drift_T
+frame_B = height - frame_T + drift_T * 2
+#  内框
+#   列
+for i in range(1, 20):
+    pygame.draw.line(screen, color['line'], (frame_L + tile_size * i, frame_T), (frame_L + tile_size * i, frame_B), 3)
+#   行
+for i in range(1, 20):
+    pygame.draw.line(screen, color['line'], (frame_L, frame_T + tile_size * i), (frame_R, frame_T + tile_size * i), 3)
+#  外框
+pygame.draw.line(screen, color['frame'], (frame_L, frame_T), (frame_L, frame_B), 3)
+pygame.draw.line(screen, color['frame'], (frame_L, frame_T), (frame_R, frame_T), 3)
+pygame.draw.line(screen, color['frame'], (frame_R, frame_T), (frame_R, frame_B), 3)
+pygame.draw.line(screen, color['frame'], (frame_L, frame_B), (frame_R, frame_B), 3)
 
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            if event.type == pygame.K_ESCAPE:
-                return
-        pygame.display.flip()
+# 文字
+default_font.render_to(screen, (frame_L, frame_T - tile_size), "Score:", color['gray'], color['none'])
 
 
 def main():
-    pause_menu()
     # 主循环
-    while True:
+    is_gaming = True
+    score = 1234567890
+    while is_gaming:
         # 操作处理
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-            if event.type == pygame.K_ESCAPE:
-                pause_menu()
+                is_gaming = False
             # 行动
             if event.type == pygame.K_UP:
                 pass
@@ -70,7 +87,9 @@ def main():
                 pass
 
         # 逻辑处理
-        pygame.display.flip()
+        default_font.render_to(screen, (frame_L + tile_size * 5, frame_T - tile_size),
+                               "{0}".format(score), color['gray'], color['none'])
+        pygame.display.update()
 
 
 if __name__ == '__main__':
