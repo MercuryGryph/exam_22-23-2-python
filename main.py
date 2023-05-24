@@ -76,6 +76,7 @@ snake_tail = []
 default_font.render_to(screen, (frame_L, frame_T - tile_size), "Score:", color['gray'], color['none'])
 
 
+# 逻辑网格位置 转换为 屏幕坐标
 def get_tile_pos_dest(pos):
     x = pos[0]
     y = pos[1]
