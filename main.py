@@ -1,3 +1,4 @@
+# 2207030142 汪诗琪 Python期末作业
 import pygame
 import pygame.freetype
 import random
@@ -14,7 +15,6 @@ class Direction(Enum):
 
 # pygame初始化
 pygame.init()
-
 # 颜色
 #  定义几个颜色备用
 color = {
