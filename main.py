@@ -19,6 +19,7 @@ pygame.init()
 color = {
     'white': [255, 255, 255],
     'gray': [170, 170, 170],
+    'dark_gray': [85, 85, 85],
     'black': [0, 0, 0],
     'red': [255, 85, 85],
     'aqua': [85, 255, 255],
@@ -27,7 +28,9 @@ color = {
     'none': [0, 0, 0, 0]
 }
 #  实际使用的颜色
-color['bg'] = color['white']  # 背景色
+color['dark_mode'] = color['dark_gray']
+color['light_mode'] = color['white']
+color['bg'] = color['light_mode']  # 背景色
 color['frame'] = color['gold']  # 棋盘边框
 color['line'] = color['gray']  # 棋盘网格
 color['apple'] = color['red']  # 苹果（水果）的颜色
@@ -128,16 +131,20 @@ def draw_stage():
 
     # 文字
     #  操作说明
-    default_font.render_to(screen, (5, 5 + 0 * default_font.get_sized_height(16)),
-                           "Operations:", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 1 * default_font.get_sized_height(16)),
-                           "↑↓←→ :", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 2 * default_font.get_sized_height(16)),
-                           " Change direction", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 3 * default_font.get_sized_height(16)), "'Space' :",
-                           color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 4 * default_font.get_sized_height(16)), " Stop move",
-                           color['gray'], color['none'], size=16)
+    default_font.render_to(screen, (5, 5 + 0 * default_font.get_sized_height(18)), "Operations:",
+                           color['gray'], color['none'], size=18)
+    default_font.render_to(screen, (5, 5 + 1 * default_font.get_sized_height(18)), "↑↓←→ :",
+                           color['gray'], color['none'], size=18)
+    default_font.render_to(screen, (5, 5 + 2 * default_font.get_sized_height(18)), " Change direction",
+                           color['gray'], color['none'], size=18)
+    default_font.render_to(screen, (5, 5 + 3 * default_font.get_sized_height(18)), "'Space' :",
+                           color['gray'], color['none'], size=18)
+    default_font.render_to(screen, (5, 5 + 4 * default_font.get_sized_height(18)), " Stop move",
+                           color['gray'], color['none'], size=18)
+    default_font.render_to(screen, (5, 5 + 5 * default_font.get_sized_height(18)), "M :",
+                           color['gray'], color['none'], size=18)
+    default_font.render_to(screen, (5, 5 + 6 * default_font.get_sized_height(18)), " Change dark/light",
+                           color['gray'], color['none'], size=18)
     #  计分板
     default_font.render_to(screen, (frame_L, frame_T - tile_size), "Score:", color['gray'], color['none'])
     default_font.render_to(screen, (frame_L + 8*tile_size, frame_T - tile_size),
@@ -179,6 +186,14 @@ def move_snake():
     snake['tail_new'] = pos.copy()
 
 
+# 切换 黑暗/明亮 模式
+def change_dark_or_light_mode():
+    if color['bg'] == color['light_mode']:
+        color['bg'] = color['dark_mode']
+    else:
+        color['bg'] = color['light_mode']
+
+
 # 日志
 def logger():
     print('[log] @', time.ctime())
@@ -198,8 +213,8 @@ if __name__ == '__main__':
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     game['is_gaming'] = False
-                # 移动方向
                 elif event.type == pygame.KEYDOWN:
+                    # 移动方向
                     if event.key == pygame.K_UP and snake['direction'] != Direction.Down:
                         snake['direction'] = Direction.Up
                     elif event.key == pygame.K_DOWN and snake['direction'] != Direction.Up:
@@ -210,6 +225,9 @@ if __name__ == '__main__':
                         snake['direction'] = Direction.Right
                     elif event.key == pygame.K_SPACE:
                         snake['direction'] = Direction.Stop
+                    # 切换 黑暗/明亮 模式
+                    elif event.key == pygame.K_m:
+                        change_dark_or_light_mode()
 
             # 逻辑处理
             #  移动蛇
