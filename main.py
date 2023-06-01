@@ -1,4 +1,4 @@
-# 2207030142 汪诗琪 Python期末作业
+import time
 import pygame
 import pygame.freetype
 import random
@@ -16,11 +16,9 @@ class Direction(Enum):
 # pygame初始化
 pygame.init()
 # 颜色
-#  定义几个颜色备用
 color = {
     'white': [255, 255, 255],
     'gray': [170, 170, 170],
-    'dark_gray': [85, 85, 85],
     'black': [0, 0, 0],
     'red': [255, 85, 85],
     'aqua': [85, 255, 255],
@@ -29,21 +27,18 @@ color = {
     'none': [0, 0, 0, 0]
 }
 #  实际使用的颜色
-color['bg'] = color['white']            # 背景色，虽然我更喜欢深灰色
-color['frame'] = color['gold']          # 棋盘边框
-color['line'] = color['gray']           # 棋盘网格
-color['apple'] = color['red']           # 苹果（水果）的颜色
-color['head'] = color['deep_green']     # 蛇头的颜色
-color['tail'] = color['aqua']           # 蛇尾的颜色，实际上做了渐变的效果，这个颜色将会是最末尾的，越往前颜色越深
+color['bg'] = color['white']  # 背景色
+color['frame'] = color['gold']  # 棋盘边框
+color['line'] = color['gray']  # 棋盘网格
+color['apple'] = color['red']  # 苹果（水果）的颜色
+color['head'] = color['deep_green']  # 蛇头的颜色
+color['tail'] = color['aqua']  # 蛇尾的颜色，实际上做了渐变的效果，这个颜色将会是最末尾的，越往前颜色越深
 # 字体
-JBmonoB = pygame.freetype.Font('fonts\\JetBrainsMono-Bold.ttf', 24)
+JetBrainsMono_Bold = pygame.freetype.Font('fonts\\JetBrainsMono-Bold.ttf', 24)
 # https://www.jetbrains.com/lp/mono/
-#  JetBrainsMono.
-#  A typeface for developers
-# 游戏内没写中文是因为字体太大了，不是为了只用这个完美的字体，绝对不是
-default_font = JBmonoB
+default_font = JetBrainsMono_Bold
 # 窗口标题
-pygame.display.set_caption("[GAME] Snake ~\\__/-O~")    # 这条蛇不如不画...
+pygame.display.set_caption("[GAME] Snake ~\\__/-O~")  # 这条蛇不如不画...
 # 窗口大小
 size = width, height = 800, 600
 screen = pygame.display.set_mode(size)
@@ -51,7 +46,7 @@ screen = pygame.display.set_mode(size)
 screen.fill(color['bg'])
 # 时钟
 clock = pygame.time.Clock()
-
+tick_rate = 4
 # 游戏网格
 #  行列
 row = 21
@@ -60,7 +55,7 @@ column = 21
 tile_size = 25
 #  偏移
 drift_H = default_font.get_sized_height(1)
-drift_W = -8*tile_size
+drift_W = -8 * tile_size
 drift_T = 0
 drift_L = 0
 #  计算实际边框位置
@@ -70,14 +65,29 @@ frame_T = (height - row * tile_size + drift_H) / 2 + drift_T
 frame_B = frame_T + row * tile_size
 
 # 蛇
-snake = {
-    'head': [column // 2, row // 2],
-    'tail': [],
-    'tail_new': [column // 2, row // 2]
-}
-snake_direction = Direction(0)
+snake = {}
 # 水果
-fruit_pos = []
+fruit = []
+# 游戏数据
+game = {
+    'score_max': 0,
+    'score': 0
+}
+
+
+# 数据初始化
+def init():
+    snake['head'] = [column // 2, row // 2]
+    snake['tail'] = []
+    snake['tail_new'] = snake['head'].copy()
+    snake['direction'] = Direction.Stop
+    game['score_max'] = max(game['score'], game['score_max'])   # 更新最大分
+    game['is_gaming'] = True
+    game['is_game_over'] = False
+    game['is_fruit_exist'] = False
+    game['is_get_fruit'] = False
+    game['score'] = 0
+    game['is_retry'] = False
 
 
 # 生成水果
@@ -104,10 +114,12 @@ def draw_stage():
     #  内框
     #   列
     for i in range(1, column):
-        pygame.draw.line(screen, color['line'], (frame_L + tile_size * i, frame_T), (frame_L + tile_size * i, frame_B), 3)
+        pygame.draw.line(screen, color['line'],
+                         (frame_L + tile_size * i, frame_T), (frame_L + tile_size * i, frame_B), 3)
     #   行
     for i in range(1, row):
-        pygame.draw.line(screen, color['line'], (frame_L, frame_T + tile_size * i), (frame_R, frame_T + tile_size * i), 3)
+        pygame.draw.line(screen, color['line'],
+                         (frame_L, frame_T + tile_size * i), (frame_R, frame_T + tile_size * i), 3)
     #  外框
     pygame.draw.line(screen, color['frame'], (frame_L, frame_T), (frame_L, frame_B), 3)
     pygame.draw.line(screen, color['frame'], (frame_L, frame_T), (frame_R, frame_T), 3)
@@ -116,35 +128,37 @@ def draw_stage():
 
     # 文字
     #  操作说明
-    default_font.render_to(screen, (5, 5+0*default_font.get_sized_height(16)),
+    default_font.render_to(screen, (5, 5 + 0 * default_font.get_sized_height(16)),
                            "Operations:", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5+1*default_font.get_sized_height(16)),
+    default_font.render_to(screen, (5, 5 + 1 * default_font.get_sized_height(16)),
                            "↑↓←→ :", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5+2*default_font.get_sized_height(16)),
+    default_font.render_to(screen, (5, 5 + 2 * default_font.get_sized_height(16)),
                            " Change direction", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5+3*default_font.get_sized_height(16)), "'Space' :",
+    default_font.render_to(screen, (5, 5 + 3 * default_font.get_sized_height(16)), "'Space' :",
                            color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5+4*default_font.get_sized_height(16)), " Stop move",
+    default_font.render_to(screen, (5, 5 + 4 * default_font.get_sized_height(16)), " Stop move",
                            color['gray'], color['none'], size=16)
     #  计分板
     default_font.render_to(screen, (frame_L, frame_T - tile_size), "Score:", color['gray'], color['none'])
+    default_font.render_to(screen, (frame_L + 8*tile_size, frame_T - tile_size),
+                           "Max Score:", color['gray'], color['none'])
 
 
 # 移动蛇
 def move_snake():
     # 移动
-    if snake_direction == Direction(0):
+    if snake['direction'] == Direction.Stop:
         return
     pos = snake['head']
-    if snake_direction == Direction(1):
+    if snake['direction'] == Direction.Up:
         snake['head'][1] -= 1
-    elif snake_direction == Direction(2):
+    elif snake['direction'] == Direction.Right:
         snake['head'][0] += 1
-    elif snake_direction == Direction(3):
+    elif snake['direction'] == Direction.Down:
         snake['head'][1] += 1
-    elif snake_direction == Direction(4):
+    elif snake['direction'] == Direction.Left:
         snake['head'][0] -= 1
-    # 判断是否移动尾巴
+    # 判断是否延长尾巴
     if snake['tail_new']:
         snake['tail'].append(snake['tail_new'])
     if game['is_get_fruit']:
@@ -152,8 +166,8 @@ def move_snake():
     else:
         del snake['tail'][0]
     # 游戏失败条件
-    if (snake['head'][0] < 0 or snake['head'][0] > column or
-            snake['head'][1] < 0 or snake['head'][1] > row or
+    if (snake['head'][0] < 0 or snake['head'][0] >= column or
+            snake['head'][1] < 0 or snake['head'][1] >= row or
             snake['head'] in snake['tail']):
         game['is_game_over'] = True
     # 处理吃水果动作
@@ -162,94 +176,102 @@ def move_snake():
         game['is_fruit_exist'] = False
         game['is_get_fruit'] = True
     del snake['tail_new']
-    snake['tail_new'] = []
-    for i in pos:
-        snake['tail_new'].append(i)
+    snake['tail_new'] = pos.copy()
+
+
+# 日志
+def logger():
+    print('[log] @', time.ctime())
+    print('\tTails ... :', snake['tail'])
+    print('\tFruit ... :', fruit)
+    print('\tHead .... :', snake['head'], snake['direction'])
+    print('\tDirection :', snake['direction'])
+    print('\tScore ... :', game['score'])
 
 
 if __name__ == '__main__':
-    game = {
-        'is_gaming': True,
-        'is_game_over': False,
-        'is_fruit_exist': False,
-        'is_get_fruit': False,
-        'score': 0
-    }
+    while True:
+        init()
+        # 主循环
+        while game['is_gaming']:
+            # 操作处理
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game['is_gaming'] = False
+                # 移动方向
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP and snake['direction'] != Direction.Down:
+                        snake['direction'] = Direction.Up
+                    elif event.key == pygame.K_DOWN and snake['direction'] != Direction.Up:
+                        snake['direction'] = Direction.Down
+                    elif event.key == pygame.K_LEFT and snake['direction'] != Direction.Right:
+                        snake['direction'] = Direction.Left
+                    elif event.key == pygame.K_RIGHT and snake['direction'] != Direction.Left:
+                        snake['direction'] = Direction.Right
+                    elif event.key == pygame.K_SPACE:
+                        snake['direction'] = Direction.Stop
 
-    # 主循环
-    while game['is_gaming']:
-        # 操作处理
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            # 逻辑处理
+            #  移动蛇
+            move_snake()
+            #  生成水果
+            if not game['is_fruit_exist']:
+                fruit = set_fruit_pos()
+                game['is_fruit_exist'] = True
+
+            # 更新画面
+            screen.fill(color['bg'])
+            draw_stage()
+            #  水果
+            pygame.draw.rect(screen, color['apple'], get_tile_pos_dest(fruit))
+            game['is_fruit_paint'] = True
+            #  蛇
+            #   头
+            pygame.draw.rect(screen, color['head'], get_tile_pos_dest(snake['head']))
+            #   尾
+            temp_color = color['tail'].copy()
+            reduce_color = []
+            for sub_pixel in color['tail']:
+                reduce_color.append(sub_pixel / (1 + len(snake['tail'])))
+            for tail in snake['tail']:
+                pygame.draw.rect(screen, temp_color, get_tile_pos_dest(tail))
+                for sub_pixel in range(3):
+                    temp_color[sub_pixel] -= reduce_color[sub_pixel]  # 颜色渐变
+            #  分数
+            default_font.render_to(screen, (frame_L + 4*tile_size, frame_T - tile_size),
+                                   "{0}".format(game['score']), color['gray'], color['none'])
+            default_font.render_to(screen, (frame_L + 14*tile_size, frame_T - tile_size),
+                                   "{0}".format(game['score_max']), color['gray'], color['none'])
+
+            # 游戏结束
+            if game['is_game_over']:
+                # 显示结算
+                default_font.render_to(screen, (10, frame_T),
+                                       'Game Over!', color['red'], color['none'], size=100)
+                default_font.render_to(screen, (10, frame_T + default_font.get_sized_height(80)),
+                                       f'You got {game["score"]} score!', color['red'], color['none'], size=66)
+                default_font.render_to(screen, (10, frame_T + 2 * default_font.get_sized_height(70)),
+                                       'Press any key to retry.', color['red'], color['none'], size=40)
                 game['is_gaming'] = False
-            # 移动方向
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP and snake_direction != Direction(3):
-                    snake_direction = Direction(1)
-                elif event.key == pygame.K_DOWN and snake_direction != Direction(1):
-                    snake_direction = Direction(3)
-                elif event.key == pygame.K_LEFT and snake_direction != Direction(2):
-                    snake_direction = Direction(4)
-                elif event.key == pygame.K_RIGHT and snake_direction != Direction(4):
-                    snake_direction = Direction(2)
-                elif event.key == pygame.K_SPACE:
-                    snake_direction = Direction(0)
+            pygame.display.flip()
 
-        # 逻辑处理
-        #  移动蛇
-        move_snake()
-        #  生成水果
-        if not game['is_fruit_exist']:
-            fruit = set_fruit_pos()
-            game['is_fruit_exist'] = True
+            logger()
 
-        # 更新画面
-        screen.fill(color['bg'])
-        draw_stage()
-        #  水果
-        pygame.draw.rect(screen, color['apple'], get_tile_pos_dest(fruit))
-        game['is_fruit_paint'] = True
-        #  蛇
-        #   头
-        pygame.draw.rect(screen, color['head'], get_tile_pos_dest(snake['head']))
-        #   尾
-        temp_color = []
-        reduce_color = []
-        for i in color['tail']:
-            temp_color.append(i)
-            reduce_color.append(i / (1 + len(snake['tail'])))
-        for tail in snake['tail']:
-            pygame.draw.rect(screen, temp_color, get_tile_pos_dest(tail))
-            for i in range(3):
-                temp_color[i] -= reduce_color[i]        # 颜色渐变
-        #  分数
-        default_font.render_to(screen, (frame_L + tile_size * 5, frame_T - tile_size),
-                               "{0}".format(game['score']), color['gray'], color['none'])
+            # 控制帧率
+            if snake['direction'] == Direction.Stop:
+                clock.tick(max(tick_rate // 2, 2))
+            else:
+                clock.tick(tick_rate)
 
-        # 游戏结束
-        if game['is_game_over']:
-            # 显示结算，不清空屏幕是为了保留玩家给成果截图的时间
-            default_font.render_to(screen, (10, frame_T),
-                                   'Game Over!', color['red'], color['none'], size=100)
-            default_font.render_to(screen, (10, frame_T + default_font.get_sized_height(80)),
-                                   'You got {} score!'.format(game['score']), color['red'], color['none'], size=66)
-            default_font.render_to(screen, (10, frame_T + 2*default_font.get_sized_height(70)),
-                                   'You can close the window.', color['red'], color['none'], size=40)
-            game['is_gaming'] = False
-        pygame.display.flip()
-
-        # 日志
-        print('[log]')
-        print('-', snake['tail'])
-        print('#', fruit)
-        print('@', snake['head'])
-
-        # 控制帧率
-        clock.tick(4)
-
-    # 游戏结束后等待手动退出
-    while game['is_game_over']:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game['is_game_over'] = False
+        # 游戏结束后等待手动退出
+        while game['is_game_over']:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game['is_game_over'] = False
+                elif event.type == pygame.KEYDOWN:
+                    game['is_retry'] = True
+                    game['is_game_over'] = False
+            clock.tick(max(tick_rate // 2, 2))
+        if not game['is_retry']:
+            break
     pygame.quit()
