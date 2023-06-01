@@ -15,10 +15,13 @@ class Direction(Enum):
 
 # pygame初始化
 pygame.init()
+# 是否打印log
+is_print_log = True
 # 颜色
 color = {
     'white': [255, 255, 255],
     'gray': [170, 170, 170],
+    'dark_gray': [85, 85, 85],
     'black': [0, 0, 0],
     'red': [255, 85, 85],
     'aqua': [85, 255, 255],
@@ -27,41 +30,44 @@ color = {
     'none': [0, 0, 0, 0]
 }
 #  实际使用的颜色
-color['bg'] = color['white']  # 背景色
+color['dark_mode'] = color['dark_gray']
+color['light_mode'] = color['white']
+color['bg'] = color['light_mode']  # 背景色
 color['frame'] = color['gold']  # 棋盘边框
 color['line'] = color['gray']  # 棋盘网格
-color['apple'] = color['red']  # 苹果（水果）的颜色
+color['fruit'] = color['red']  # 水果颜色
 color['head'] = color['deep_green']  # 蛇头的颜色
 color['tail'] = color['aqua']  # 蛇尾的颜色，实际上做了渐变的效果，这个颜色将会是最末尾的，越往前颜色越深
 # 字体
 JetBrainsMono_Bold = pygame.freetype.Font('fonts\\JetBrainsMono-Bold.ttf', 24)
 # https://www.jetbrains.com/lp/mono/
-default_font = JetBrainsMono_Bold
+main_font = JetBrainsMono_Bold
 # 窗口标题
 pygame.display.set_caption("[GAME] Snake ~\\__/-O~")  # 这条蛇不如不画...
-# 窗口大小
-size = width, height = 800, 600
-screen = pygame.display.set_mode(size)
+# 窗口大小 (px)
+screen_size = screen_width, screen_height = 800, 600
+screen = pygame.display.set_mode(screen_size)
 # 背景颜色
 screen.fill(color['bg'])
 # 时钟
 clock = pygame.time.Clock()
 tick_rate = 4
+tick_rate_low = max(tick_rate // 2, 2)
 # 游戏网格
 #  行列
 row = 21
 column = 21
-#  格尺寸
+#  格尺寸 (px)
 tile_size = 25
 #  偏移
-drift_H = default_font.get_sized_height(1)
+drift_H = main_font.get_sized_height(1)
 drift_W = -8 * tile_size
 drift_T = 0
 drift_L = 0
 #  计算实际边框位置
-frame_L = (width - column * tile_size - drift_W) / 2 + drift_L
+frame_L = (screen_width - column * tile_size - drift_W) / 2 + drift_L
 frame_R = frame_L + column * tile_size
-frame_T = (height - row * tile_size + drift_H) / 2 + drift_T
+frame_T = (screen_height - row * tile_size + drift_H) / 2 + drift_T
 frame_B = frame_T + row * tile_size
 
 # 蛇
@@ -81,13 +87,21 @@ def init():
     snake['tail'] = []
     snake['tail_new'] = snake['head'].copy()
     snake['direction'] = Direction.Stop
-    game['score_max'] = max(game['score'], game['score_max'])   # 更新最大分
+    game['score_max'] = max(game['score'], game['score_max'])  # 更新最大分
     game['is_gaming'] = True
     game['is_game_over'] = False
     game['is_fruit_exist'] = False
     game['is_get_fruit'] = False
     game['score'] = 0
     game['is_retry'] = False
+
+
+# 切换 黑暗/明亮 模式
+def change_dark_or_light_mode():
+    if color['bg'] == color['light_mode']:
+        color['bg'] = color['dark_mode']
+    else:
+        color['bg'] = color['light_mode']
 
 
 # 生成水果
@@ -109,6 +123,7 @@ def get_tile_pos_dest(pos):
     return px, py, tile_size, tile_size
 
 
+# 渲染
 def draw_stage():
     # 游戏框
     #  内框
@@ -128,20 +143,48 @@ def draw_stage():
 
     # 文字
     #  操作说明
-    default_font.render_to(screen, (5, 5 + 0 * default_font.get_sized_height(16)),
-                           "Operations:", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 1 * default_font.get_sized_height(16)),
-                           "↑↓←→ :", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 2 * default_font.get_sized_height(16)),
-                           " Change direction", color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 3 * default_font.get_sized_height(16)), "'Space' :",
-                           color['gray'], color['none'], size=16)
-    default_font.render_to(screen, (5, 5 + 4 * default_font.get_sized_height(16)), " Stop move",
-                           color['gray'], color['none'], size=16)
+    main_font.render_to(screen, (5, 5 + 0 * main_font.get_sized_height(16)),
+                        "Operations:", color['gray'], color['none'], size=16)
+    main_font.render_to(screen, (5, 5 + 1 * main_font.get_sized_height(16)),
+                        "↑↓←→ :", color['gray'], color['none'], size=16)
+    main_font.render_to(screen, (5, 5 + 2 * main_font.get_sized_height(16)),
+                        " Change direction", color['gray'], color['none'], size=16)
+    main_font.render_to(screen, (5, 5 + 3 * main_font.get_sized_height(16)), "'Space' :",
+                        color['gray'], color['none'], size=16)
+    main_font.render_to(screen, (5, 5 + 4 * main_font.get_sized_height(16)), " Stop move",
+                        color['gray'], color['none'], size=16)
+    main_font.render_to(screen, (5, 5 + 5 * main_font.get_sized_height(16)), "M :",
+                        color['gray'], color['none'], size=16)
+    main_font.render_to(screen, (5, 5 + 6 * main_font.get_sized_height(16)), " Change Dark/Light mode",
+                        color['gray'], color['none'], size=16)
     #  计分板
-    default_font.render_to(screen, (frame_L, frame_T - tile_size), "Score:", color['gray'], color['none'])
-    default_font.render_to(screen, (frame_L + 8*tile_size, frame_T - tile_size),
-                           "Max Score:", color['gray'], color['none'])
+    main_font.render_to(screen, (frame_L, frame_T - tile_size), "Score:", color['gray'], color['none'])
+    main_font.render_to(screen, (frame_L + 8 * tile_size, frame_T - tile_size),
+                        "Max Score:", color['gray'], color['none'])
+
+
+def draw_items():
+    #  水果
+    pygame.draw.rect(screen, color['fruit'], get_tile_pos_dest(fruit))
+    game['is_fruit_paint'] = True
+    #  蛇
+    #   头
+    pygame.draw.rect(screen, color['head'], get_tile_pos_dest(snake['head']))
+    #   尾
+    temp_color = color['tail'].copy()
+    reduce_color = []
+    for sub_pixel in color['tail']:
+        reduce_color.append(sub_pixel / (1 + len(snake['tail'])))
+    for tail in snake['tail']:
+        pygame.draw.rect(screen, temp_color, get_tile_pos_dest(tail))
+        for sub_pixel in range(3):
+            temp_color[sub_pixel] -= reduce_color[sub_pixel]  # 颜色渐变
+    #  分数
+    main_font.render_to(screen, (frame_L + 4 * tile_size, frame_T - tile_size),
+                        "{0}".format(game['score']), color['gray'], color['none'])
+    #  最大得分
+    main_font.render_to(screen, (frame_L + 14 * tile_size, frame_T - tile_size),
+                        "{0}".format(game['score_max']), color['gray'], color['none'])
 
 
 # 移动蛇
@@ -181,6 +224,8 @@ def move_snake():
 
 # 日志
 def logger():
+    if not is_print_log:
+        return
     print('[log] @', time.ctime())
     print('\tTails ... :', snake['tail'])
     print('\tFruit ... :', fruit)
@@ -198,8 +243,8 @@ if __name__ == '__main__':
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     game['is_gaming'] = False
-                # 移动方向
                 elif event.type == pygame.KEYDOWN:
+                    # 移动方向
                     if event.key == pygame.K_UP and snake['direction'] != Direction.Down:
                         snake['direction'] = Direction.Up
                     elif event.key == pygame.K_DOWN and snake['direction'] != Direction.Up:
@@ -210,6 +255,9 @@ if __name__ == '__main__':
                         snake['direction'] = Direction.Right
                     elif event.key == pygame.K_SPACE:
                         snake['direction'] = Direction.Stop
+                    # 黑暗/明亮 模式
+                    elif event.key == pygame.K_m:
+                        change_dark_or_light_mode()
 
             # 逻辑处理
             #  移动蛇
@@ -222,36 +270,17 @@ if __name__ == '__main__':
             # 更新画面
             screen.fill(color['bg'])
             draw_stage()
-            #  水果
-            pygame.draw.rect(screen, color['apple'], get_tile_pos_dest(fruit))
-            game['is_fruit_paint'] = True
-            #  蛇
-            #   头
-            pygame.draw.rect(screen, color['head'], get_tile_pos_dest(snake['head']))
-            #   尾
-            temp_color = color['tail'].copy()
-            reduce_color = []
-            for sub_pixel in color['tail']:
-                reduce_color.append(sub_pixel / (1 + len(snake['tail'])))
-            for tail in snake['tail']:
-                pygame.draw.rect(screen, temp_color, get_tile_pos_dest(tail))
-                for sub_pixel in range(3):
-                    temp_color[sub_pixel] -= reduce_color[sub_pixel]  # 颜色渐变
-            #  分数
-            default_font.render_to(screen, (frame_L + 4*tile_size, frame_T - tile_size),
-                                   "{0}".format(game['score']), color['gray'], color['none'])
-            default_font.render_to(screen, (frame_L + 14*tile_size, frame_T - tile_size),
-                                   "{0}".format(game['score_max']), color['gray'], color['none'])
+            draw_items()
 
             # 游戏结束
             if game['is_game_over']:
                 # 显示结算
-                default_font.render_to(screen, (10, frame_T),
-                                       'Game Over!', color['red'], color['none'], size=100)
-                default_font.render_to(screen, (10, frame_T + default_font.get_sized_height(80)),
-                                       f'You got {game["score"]} score!', color['red'], color['none'], size=66)
-                default_font.render_to(screen, (10, frame_T + 2 * default_font.get_sized_height(70)),
-                                       'Press any key to retry.', color['red'], color['none'], size=40)
+                main_font.render_to(screen, (10, frame_T),
+                                    'Game Over!', color['red'], color['none'], size=100)
+                main_font.render_to(screen, (10, frame_T + main_font.get_sized_height(80)),
+                                    f'You got {game["score"]} score!', color['red'], color['none'], size=66)
+                main_font.render_to(screen, (10, frame_T + 2 * main_font.get_sized_height(70)),
+                                    'Press any key to retry.', color['red'], color['none'], size=40)
                 game['is_gaming'] = False
             pygame.display.flip()
 
@@ -259,11 +288,11 @@ if __name__ == '__main__':
 
             # 控制帧率
             if snake['direction'] == Direction.Stop:
-                clock.tick(max(tick_rate // 2, 2))
+                clock.tick(tick_rate_low)
             else:
                 clock.tick(tick_rate)
 
-        # 游戏结束后等待手动退出
+        # 游戏结束
         while game['is_game_over']:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -271,7 +300,7 @@ if __name__ == '__main__':
                 elif event.type == pygame.KEYDOWN:
                     game['is_retry'] = True
                     game['is_game_over'] = False
-            clock.tick(max(tick_rate // 2, 2))
+            clock.tick(tick_rate_low)
         if not game['is_retry']:
             break
     pygame.quit()
