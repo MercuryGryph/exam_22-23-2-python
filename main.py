@@ -51,7 +51,7 @@ screen = pygame.display.set_mode(size)
 screen.fill(color['bg'])
 # 时钟
 clock = pygame.time.Clock()
-tick_rate = 4
+tick_rate = 5
 # 游戏网格
 #  行列
 row = 21
@@ -148,9 +148,34 @@ def draw_stage():
     default_font.render_to(screen, (5, 5 + 6 * default_font.get_sized_height(18)), " Change dark/light",
                            color['gray'], color['none'], size=18)
     #  计分板
-    default_font.render_to(screen, (frame_L, frame_T - tile_size), "Score:", color['gray'], color['none'])
-    default_font.render_to(screen, (frame_L + 8*tile_size, frame_T - tile_size),
-                           "Max Score:", color['gray'], color['none'])
+    default_font.render_to(screen, (frame_L + 0 * tile_size, frame_T - tile_size), "Score:",
+                           color['gray'], color['none'])
+    default_font.render_to(screen, (frame_L + 8 * tile_size, frame_T - tile_size), "Max Score:",
+                           color['gray'], color['none'])
+
+
+def draw_items():
+    #  水果
+    pygame.draw.rect(screen, color['apple'], get_tile_pos_dest(fruit))
+    #  蛇
+    #   头
+    pygame.draw.rect(screen, color['head'], get_tile_pos_dest(snake['head']))
+    #   尾
+    temp_color = color['tail'].copy()
+    reduce_color = []
+    for sub_pixel in color['tail']:
+        reduce_color.append(sub_pixel / (1 + len(snake['tail'])))
+    for tail in snake['tail']:
+        pygame.draw.rect(screen, temp_color, get_tile_pos_dest(tail))
+        for sub_pixel in range(3):
+            temp_color[sub_pixel] -= reduce_color[sub_pixel]  # 颜色渐变
+    #  分数
+    default_font.render_to(screen, (frame_L + 4 * tile_size, frame_T - tile_size),
+                           f"{game['score']}",
+                           color['gray'], color['none'])
+    default_font.render_to(screen, (frame_L + 14 * tile_size, frame_T - tile_size),
+                           f"{game['score_max']}",
+                           color['gray'], color['none'])
 
 
 # 移动蛇
@@ -244,36 +269,20 @@ if __name__ == '__main__':
             # 更新画面
             screen.fill(color['bg'])
             draw_stage()
-            #  水果
-            pygame.draw.rect(screen, color['apple'], get_tile_pos_dest(fruit))
-            game['is_fruit_paint'] = True
-            #  蛇
-            #   头
-            pygame.draw.rect(screen, color['head'], get_tile_pos_dest(snake['head']))
-            #   尾
-            temp_color = color['tail'].copy()
-            reduce_color = []
-            for sub_pixel in color['tail']:
-                reduce_color.append(sub_pixel / (1 + len(snake['tail'])))
-            for tail in snake['tail']:
-                pygame.draw.rect(screen, temp_color, get_tile_pos_dest(tail))
-                for sub_pixel in range(3):
-                    temp_color[sub_pixel] -= reduce_color[sub_pixel]  # 颜色渐变
-            #  分数
-            default_font.render_to(screen, (frame_L + 4*tile_size, frame_T - tile_size),
-                                   "{0}".format(game['score']), color['gray'], color['none'])
-            default_font.render_to(screen, (frame_L + 14*tile_size, frame_T - tile_size),
-                                   "{0}".format(game['score_max']), color['gray'], color['none'])
+            draw_items()
 
             # 游戏结束
             if game['is_game_over']:
                 # 显示结算
                 default_font.render_to(screen, (10, frame_T),
-                                       'Game Over!', color['red'], color['none'], size=100)
+                                       'Game Over!',
+                                       color['red'], color['none'], size=100)
                 default_font.render_to(screen, (10, frame_T + default_font.get_sized_height(80)),
-                                       f'You got {game["score"]} score!', color['red'], color['none'], size=66)
+                                       f'You got {game["score"]} score!',
+                                       color['red'], color['none'], size=66)
                 default_font.render_to(screen, (10, frame_T + 2 * default_font.get_sized_height(70)),
-                                       'Press any key to retry.', color['red'], color['none'], size=40)
+                                       'Press any key to retry.',
+                                       color['red'], color['none'], size=40)
                 game['is_gaming'] = False
             pygame.display.flip()
 
