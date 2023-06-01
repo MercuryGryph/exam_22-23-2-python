@@ -15,6 +15,8 @@ class Direction(Enum):
 
 # pygame初始化
 pygame.init()
+# 是否打印log
+is_print_log = False
 # 颜色
 color = {
     'white': [255, 255, 255],
@@ -196,6 +198,8 @@ def change_dark_or_light_mode():
 
 # 日志
 def logger():
+    if not is_print_log:
+        return
     print('[log] @', time.ctime())
     print('\tTails ... :', snake['tail'])
     print('\tFruit ... :', fruit)
