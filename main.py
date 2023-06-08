@@ -1,7 +1,7 @@
-# import pygame
+# 提醒：查看从本地复制的代码前，先从Git更新
+from snake import *
 import pygame.freetype
 import random
-from snake import *
 
 # pygame初始化
 pygame.init()
@@ -20,16 +20,16 @@ color = {
 #  实际使用的颜色
 color['dark_mode'] = color['dark_gray']
 color['light_mode'] = color['white']
-color['bg'] = color['light_mode']  # 背景色
-color['font'] = color['gray']   # 字体颜色
-color['frame'] = color['gold']  # 棋盘边框
-color['line'] = color['gray']  # 棋盘网格
-color['fruit'] = color['red']  # 苹果（水果）的颜色
-color['head'] = color['deep_green']  # 蛇头的颜色
-color['tail'] = color['aqua']  # 蛇尾的颜色，实际上做了渐变的效果，这个颜色将会是最末尾的，越往前颜色越深
+color['bg'] = color['light_mode']       # 背景色
+color['font'] = color['gray']           # 字体颜色
+color['frame'] = color['gold']          # 棋盘边框
+color['line'] = color['gray']           # 棋盘网格
+color['fruit'] = color['red']           # 苹果（水果）的颜色
+color['head'] = color['deep_green']     # 蛇头的颜色
+color['tail'] = color['aqua']           # 蛇尾的颜色，实际上做了渐变的效果，这个颜色将会是最末尾的，越往前颜色越深
 # 字体
+#  https://www.jetbrains.com/lp/mono/
 JetBrainsMono_Bold = pygame.freetype.Font('fonts\\JetBrainsMono-Bold.ttf', 24)
-# https://www.jetbrains.com/lp/mono/
 default_font = JetBrainsMono_Bold
 # 窗口标题
 pygame.display.set_caption("[GAME] Snake ~\\__/-O~")  # 这条蛇不如不画...
@@ -44,30 +44,33 @@ game_plane_size = row, column = 21, 21
 #  格尺寸
 tile_size = 25
 
-# 操作说明
-operations_info = """Operations:
-                ↑↓←→ :
-                -Change direction.
-                'Space' :
-                -Stop move.
-                M :
-                 Change dark/light."""\
-    .split('\n')
-
 
 # 生成水果
 def gen_fruit_pos():
-    x = random.randint(0, column - 1)
-    y = random.randint(0, row - 1)
-    while [x, y] == snake.pos or [x, y] in snake.tail:
-        x = random.randint(0, column - 1)
-        y = random.randint(0, row - 1)
-    return [x, y]
+    x = random.randint(0, game.col - 1)
+    y = random.randint(0, game.row - 1)
+    while [x, y] == snake.pos or [x, y] in snake.tail:  # 如果生成的位置非法，就重新生成
+        x = random.randint(0, game.col - 1)
+        y = random.randint(0, game.row - 1)
+    return x, y
 
 
-def draw_text():
-    # 文字
-    #  操作说明
+# 操作说明
+operations_info = """Operations:
+
+                ↑↓←→ :
+                - Change direction.
+
+                'Space' :
+                - Stop move.
+
+                M :
+                - Change dark/light."""\
+    .split('\n')
+
+
+# 渲染操作说明
+def render_text():
     line_n = 0
     for line in operations_info:
         default_font.render_to(game.screen, (5, 5 + line_n * default_font.get_sized_height(18)), line.lstrip(),
@@ -76,6 +79,7 @@ def draw_text():
     del line_n
 
 
+# 判断蛇头位置是否合法
 def is_out_of_bounds():
     if (not 0 <= snake.pos[0] < game.row
             or not 0 <= snake.pos[1] < game.col
@@ -85,9 +89,8 @@ def is_out_of_bounds():
         return False
 
 
+# 处理吃水果
 def handle_is_get_fruit():
-    if not game.fruit_pos:
-        game.fruit_pos = gen_fruit_pos()
     if snake.pos == game.fruit_pos:
         snake.is_get_fruit = True
         game.score += 1
@@ -105,33 +108,17 @@ def change_dark_or_light_mode():
         color['bg'] = color['light_mode']
 
 
-def render_text():
-    #  操作说明
-    default_font.render_to(game.screen, (5, 5 + 0 * default_font.get_sized_height(18)), "Operations:",
-                           color['gray'], color['none'], size=18)
-    default_font.render_to(game.screen, (5, 5 + 1 * default_font.get_sized_height(18)), "↑↓←→ :",
-                           color['gray'], color['none'], size=18)
-    default_font.render_to(game.screen, (5, 5 + 2 * default_font.get_sized_height(18)), " Change direction.",
-                           color['gray'], color['none'], size=18)
-    default_font.render_to(game.screen, (5, 5 + 3 * default_font.get_sized_height(18)), "'Space' :",
-                           color['gray'], color['none'], size=18)
-    default_font.render_to(game.screen, (5, 5 + 4 * default_font.get_sized_height(18)), " Stop move.",
-                           color['gray'], color['none'], size=18)
-    default_font.render_to(game.screen, (5, 5 + 5 * default_font.get_sized_height(18)), "M :",
-                           color['gray'], color['none'], size=18)
-    default_font.render_to(game.screen, (5, 5 + 6 * default_font.get_sized_height(18)), " Change dark/light.",
-                           color['gray'], color['none'], size=18)
-
-
 def __main__():
     while True:
         is_game_over = False
+        game.fruit_pos = gen_fruit_pos()
         # ---主循环---
         while not is_game_over:
             # 操作处理
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+
                 elif event.type == pygame.KEYDOWN:
                     # 方向控制
                     if event.key == pygame.K_UP:
@@ -193,12 +180,16 @@ def __main__():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         change_dark_or_light_mode()
+
                     else:
                         is_retry = True
+
             clock.tick(tick_rate)
+
         # 重置数据
         game.update_score_max()
         game.restart()
