@@ -137,15 +137,15 @@ def draw_stage():
                            color['gray'], color['none'], size=18)
     default_font.render_to(screen, (5, 5 + 1 * default_font.get_sized_height(18)), "↑↓←→ :",
                            color['gray'], color['none'], size=18)
-    default_font.render_to(screen, (5, 5 + 2 * default_font.get_sized_height(18)), " Change direction",
+    default_font.render_to(screen, (5, 5 + 2 * default_font.get_sized_height(18)), " Change direction.",
                            color['gray'], color['none'], size=18)
     default_font.render_to(screen, (5, 5 + 3 * default_font.get_sized_height(18)), "'Space' :",
                            color['gray'], color['none'], size=18)
-    default_font.render_to(screen, (5, 5 + 4 * default_font.get_sized_height(18)), " Stop move",
+    default_font.render_to(screen, (5, 5 + 4 * default_font.get_sized_height(18)), " Stop move.",
                            color['gray'], color['none'], size=18)
     default_font.render_to(screen, (5, 5 + 5 * default_font.get_sized_height(18)), "M :",
                            color['gray'], color['none'], size=18)
-    default_font.render_to(screen, (5, 5 + 6 * default_font.get_sized_height(18)), " Change dark/light",
+    default_font.render_to(screen, (5, 5 + 6 * default_font.get_sized_height(18)), " Change dark/light.",
                            color['gray'], color['none'], size=18)
     #  计分板
     default_font.render_to(screen, (frame_L + 0 * tile_size, frame_T - tile_size), "Score:",
