@@ -52,7 +52,7 @@ def gen_fruit_pos():
     while [x, y] == snake.pos or [x, y] in snake.tail:  # 如果生成的位置非法，就重新生成
         x = random.randint(0, game.col - 1)
         y = random.randint(0, game.row - 1)
-    return x, y
+    return [x, y]
 
 
 # 操作说明
