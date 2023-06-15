@@ -119,6 +119,7 @@ def __main__():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     return
+
                 elif event.type == pygame.KEYDOWN:
                     # 方向控制
                     if event.key == pygame.K_UP:
