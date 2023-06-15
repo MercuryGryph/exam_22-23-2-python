@@ -118,7 +118,7 @@ def __main__():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-
+                    return
                 elif event.type == pygame.KEYDOWN:
                     # 方向控制
                     if event.key == pygame.K_UP:
@@ -197,7 +197,6 @@ def __main__():
 
 
 if __name__ == '__main__':
-    while True:
-        game = SnakeGame(window_size, default_font, game_plane_size, tile_size)
-        snake = Snake(game)
-        __main__()
+    game = SnakeGame(window_size, default_font, game_plane_size, tile_size)
+    snake = Snake(game)
+    __main__()
