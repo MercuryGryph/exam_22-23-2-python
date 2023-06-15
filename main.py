@@ -181,7 +181,7 @@ def __main__():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-
+                    return
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         change_dark_or_light_mode()
